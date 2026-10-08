@@ -1,0 +1,73 @@
+{% extends "plugin.html" %}
+
+{% macro arrow(direction) -%}
+{%- if direction == 'up' -%}
+<svg class="arrow" viewBox="0 0 10 10"><polygon points="5,1 9.5,9 0.5,9"/></svg>
+{%- elif direction == 'down' -%}
+<svg class="arrow" viewBox="0 0 10 10"><polygon points="0.5,1 9.5,1 5,9"/></svg>
+{%- else -%}
+<svg class="arrow" viewBox="0 0 10 10"><rect x="1" y="4" width="8" height="2"/></svg>
+{%- endif -%}
+{%- endmacro %}
+
+{% macro spark(q) -%}
+{%- if q.sparkline -%}
+<svg class="spark" viewBox="0 0 {{ q.sparkline.w }} {{ q.sparkline.h }}" preserveAspectRatio="none">
+    <polygon class="spark-area" points="{{ q.sparkline.area }}"/>
+    <line class="spark-base" x1="0" y1="{{ q.sparkline.baseline }}" x2="{{ q.sparkline.w }}" y2="{{ q.sparkline.baseline }}" vector-effect="non-scaling-stroke"/>
+    <polyline class="spark-line" points="{{ q.sparkline.line }}" vector-effect="non-scaling-stroke"/>
+</svg>
+{%- endif -%}
+{%- endmacro %}
+
+{% block content %}
+<div class="stocks layout-{{ layout }} {{ 'mono' if color_mode == 'mono' else 'color' }}" style="--rows: {{ ((count + grid_cols - 1) // grid_cols) }}; --cols: {{ grid_cols }};">
+
+    <header class="head">
+        <span class="head-title">{{ title or "Markets" }}</span>
+        <span class="head-range">{{ range_label }}</span>
+    </header>
+
+    {% if layout == 'hero' %}
+    {% set q = quotes[0] %}
+    <main class="hero {{ q.direction }}">
+        {% if q.error %}
+            <div class="hero-name">{{ q.name }}</div>
+            <div class="err">{{ q.error }}</div>
+        {% else %}
+            <div class="hero-name">{{ q.name }}{% if q.sub %} <span class="sym">{{ q.sub }}</span>{% endif %}</div>
+            <div class="hero-price">{{ q.price }}</div>
+            <div class="hero-change chg">{{ arrow(q.direction) }}<span>{{ q.change }}</span><span>({{ q.pct }})</span></div>
+            {% if show_chart %}<div class="hero-chart">{{ spark(q) }}</div>{% endif %}
+        {% endif %}
+    </main>
+
+    {% else %}
+    <main class="list">
+        {% set rows = ((count + grid_cols - 1) // grid_cols) %}
+        {% for q in quotes %}
+        <div class="row {{ q.direction if not q.error else 'error' }}{% if loop.index % rows == 0 or loop.last %} col-end{% endif %}">
+            <div class="name">
+                <div class="name-main">{{ q.name }}</div>
+                {% if q.sub %}<div class="name-sub">{{ q.sub }}</div>{% endif %}
+            </div>
+            {% if show_chart %}<div class="chart">{% if not q.error %}{{ spark(q) }}{% endif %}</div>{% endif %}
+            {% if q.error %}
+            <div class="nums"><div class="err">{{ q.error }}</div></div>
+            {% else %}
+            <div class="nums">
+                <div class="price">{{ q.price }}</div>
+                <div class="chg">{{ arrow(q.direction) }}<span>{{ q.pct }}</span></div>
+            </div>
+            {% endif %}
+        </div>
+        {% endfor %}
+    </main>
+    {% endif %}
+
+    <footer class="foot">
+        <span>{{ market_status }}</span>
+        <span>{% if updated %}As of {{ updated }}{% endif %}</span>
+    </footer>
+</div>
+{% endblock %}

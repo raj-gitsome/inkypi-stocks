@@ -1,0 +1,74 @@
+<div class="form-group">
+    <div class="form-group">
+        <label for="title" class="form-label">Title:</label>
+        <input type="text" id="title" name="title" placeholder="Markets" class="form-input">
+    </div>
+    <div class="form-group">
+        <label for="tickers" class="form-label">Tickers:</label>
+        <input type="text" id="tickers" name="tickers" class="form-input" required
+            placeholder="^GSPC, ^DJI, ^IXIC, AAPL">
+    </div>
+    <div class="form-group">
+        <span style="color: var(--text-secondary, var(--text-primary)); font-size: 0.9em;">
+            Comma separated, up to 8. Examples: ^GSPC (S&amp;P 500), ^DJI (Dow), ^IXIC (Nasdaq), ^RUT (Russell 2000),
+            AAPL, BTC-USD, GC=F (gold). Add a custom label with "=", e.g. <code>MSFT=Microsoft</code>.
+            If an index isn't on your plan, its ETF (SPY, DIA, ONEQ, IWM) is shown instead.
+        </span>
+    </div>
+    <div class="form-group">
+        <span style="color: var(--text-secondary, var(--text-primary)); font-size: 0.9em;">
+            Market data comes from <a href="https://twelvedata.com/pricing" target="_blank">Twelve Data</a>.
+            Get a free API key there and save it as <code>TWELVE_DATA_API_KEY</code> on the
+            <a href="/api-keys">API Keys</a> page. The free plan allows 800 requests a day, about one refresh
+            every 15 minutes with 8 tickers.
+        </span>
+    </div>
+    <div class="form-group nowrap">
+        <label for="chartRange" class="form-label">Change Over:</label>
+        <select id="chartRange" name="chartRange" class="form-input">
+            {% for r in ranges %}
+            <option value="{{ r.value }}">{{ r.label }}</option>
+            {% endfor %}
+        </select>
+    </div>
+    <div class="form-group">
+        <label for="showChart" class="form-label">Show Charts:</label>
+        <div class="toggle-container">
+            <input type="checkbox" id="showChart" name="showChart" class="toggle-checkbox" value="true" checked
+                onclick="this.value = this.checked ? 'true' : 'false'">
+            <label for="showChart" class="toggle-label"></label>
+        </div>
+    </div>
+    <div class="form-group nowrap">
+        <label for="colorMode" class="form-label">Gains / Losses:</label>
+        <select id="colorMode" name="colorMode" class="form-input">
+            <option value="color">Green / Red</option>
+            <option value="mono">Black &amp; White (arrows only)</option>
+        </select>
+    </div>
+</div>
+
+<script>
+    document.addEventListener('DOMContentLoaded', () => {
+        // Unchecked checkboxes aren't submitted, so make sure "false" is still sent.
+        const form = document.getElementById('showChart').form;
+        if (form) {
+            form.addEventListener('formdata', (e) => {
+                if (!document.getElementById('showChart').checked) e.formData.set('showChart', 'false');
+            });
+        }
+
+        if (loadPluginSettings) {
+            document.getElementById('title').value = pluginSettings.title || '';
+            document.getElementById('tickers').value = pluginSettings.tickers || '';
+            document.getElementById('chartRange').value = pluginSettings.chartRange || '1d';
+            document.getElementById('colorMode').value = pluginSettings.colorMode || 'color';
+            const show = pluginSettings.showChart !== 'false' && pluginSettings.showChart !== false;
+            const box = document.getElementById('showChart');
+            box.checked = show;
+            box.value = show ? 'true' : 'false';
+        } else {
+            document.getElementById('tickers').value = '^GSPC, ^DJI, ^IXIC';
+        }
+    });
+</script>
